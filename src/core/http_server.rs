@@ -1,11 +1,13 @@
 use axum::{
     extract::{State, Request},
-    http::{StatusCode, header},
-    response::{IntoResponse, Response},
+    http::{StatusCode, header, HeaderMap},
+    response::{IntoResponse, Response, sse::Event, Sse},
     routing::{post, get},
     Json, Router,
     middleware::{self, Next},
 };
+use futures::stream::{self, Stream};
+use std::convert::Infallible;
 use serde_json::json;
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -92,6 +94,7 @@ impl HttpServer {
 
         let app = Router::new()
             .route("/mcp", post(handle_mcp_request))
+            .route("/sse", get(handle_sse_stream))
             .route("/health", get(health_check))
             // Dashboard HTML (public - auth checked by JavaScript)
             .route("/dashboard", get(serve_dashboard))
@@ -122,6 +125,47 @@ async fn health_check() -> impl IntoResponse {
         "service": "mecp",
         "version": env!("CARGO_PKG_VERSION")
     }))
+}
+
+/// SSE endpoint for MCP streaming
+/// This endpoint supports Server-Sent Events for ChatGPT and other MCP clients
+async fn handle_sse_stream(
+    State(_state): State<AppState>,
+    _headers: HeaderMap,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    info!("SSE connection established");
+    
+    // Create a stream that sends initial connection event and periodic heartbeats
+    let stream = stream::unfold(true, |first| async move {
+        if first {
+            // Send initial connection event
+            let event = Event::default()
+                .event("connected")
+                .data(json!({
+                    "status": "connected",
+                    "service": "mecp",
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "protocol": "sse"
+                }).to_string());
+            Some((
+                Ok(event),
+                false
+            ))
+        } else {
+            // Send periodic heartbeat to keep connection alive
+            tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+            let heartbeat = Event::default()
+                .event("heartbeat")
+                .data(json!({"timestamp": Utc::now().to_rfc3339()}).to_string());
+            Some((
+                Ok(heartbeat),
+                false
+            ))
+        }
+    });
+    
+    Sse::new(stream)
+        .keep_alive(axum::response::sse::KeepAlive::default())
 }
 
 async fn handle_mcp_request(
