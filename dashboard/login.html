@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeCP Dashboard - Web3 Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .wallet-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .wallet-info.hidden {
+            display: none;
+        }
+
+        .wallet-address {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #667eea;
+            word-break: break-all;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .status-disconnected {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🔐 MeCP Dashboard</h1>
+            <p>Web3 Authentication Required</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div id="walletInfo" class="wallet-info hidden">
+            <p><span class="status-indicator status-connected"></span><strong>Wallet Connected</strong></p>
+            <div class="wallet-address" id="walletAddress"></div>
+        </div>
+
+        <button id="connectBtn" class="btn btn-primary">
+            <span>🦊 Connect MetaMask</span>
+        </button>
+
+        <button id="signBtn" class="btn btn-secondary" disabled>
+            <span>✍️ Sign Message</span>
+        </button>
+
+        <div class="info-box">
+            <strong>ℹ️ How it works:</strong>
+            <ul>
+                <li>Connect your MetaMask wallet</li>
+                <li>Sign a message to prove ownership</li>
+                <li>Get a 24-hour session token</li>
+                <li>No gas fees or transactions required</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let userAddress = null;
+        let challengeMessage = null;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const signBtn = document.getElementById('signBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddress = document.getElementById('walletAddress');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Check if already authenticated
+        window.addEventListener('load', async () => {
+            const token = localStorage.getItem('mecp_auth_token');
+            if (token) {
+                // Try to access dashboard with existing token
+                try {
+                    const response = await fetch('/api/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Token still valid, redirect to dashboard
+                        window.location.href = '/dashboard';
+                        return;
+                    } else {
+                        // Token expired or invalid
+                        localStorage.removeItem('mecp_auth_token');
+                        localStorage.removeItem('mecp_auth_expires');
+                    }
+                } catch (error) {
+                    console.error('Token validation failed:', error);
+                    localStorage.removeItem('mecp_auth_token');
+                    localStorage.removeItem('mecp_auth_expires');
+                }
+            }
+        });
+
+        // Check if MetaMask is installed
+        function checkMetaMask() {
+            if (typeof window.ethereum === 'undefined') {
+                showError('MetaMask is not installed. Please install MetaMask browser extension.');
+                return false;
+            }
+            return true;
+        }
+
+        // Connect wallet
+        connectBtn.addEventListener('click', async () => {
+            if (!checkMetaMask()) return;
+
+            try {
+                setButtonLoading(connectBtn, true);
+                
+                // Request account access
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                userAddress = accounts[0];
+                
+                // Update UI
+                walletInfo.classList.remove('hidden');
+                walletAddress.textContent = userAddress;
+                signBtn.disabled = false;
+                connectBtn.innerHTML = '<span>✅ Connected</span>';
+                connectBtn.disabled = true;
+                
+                clearError();
+            } catch (error) {
+                console.error('Connection error:', error);
+                showError('Failed to connect wallet: ' + error.message);
+            } finally {
+                setButtonLoading(connectBtn, false);
+            }
+        });
+
+        // Sign message and authenticate
+        signBtn.addEventListener('click', async () => {
+            if (!userAddress) {
+                showError('Please connect wallet first');
+                return;
+            }
+
+            try {
+                setButtonLoading(signBtn, true);
+                
+                // Get challenge from server
+                const challengeResponse = await fetch('/api/auth/challenge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ address: userAddress })
+                });
+
+                if (!challengeResponse.ok) {
+                    throw new Error('Failed to get login challenge');
+                }
+
+                const challengeData = await challengeResponse.json();
+                challengeMessage = challengeData.message;
+                
+                console.log('Challenge message:', challengeMessage);
+                console.log('Signing with address:', userAddress);
+
+                // Request signature from MetaMask
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [challengeMessage, userAddress]
+                });
+                
+                console.log('Signature obtained:', signature);
+
+                // Verify signature with server
+                const verifyResponse = await fetch('/api/auth/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        address: userAddress,
+                        signature: signature,
+                        message: challengeMessage
+                    })
+                });
+
+                if (!verifyResponse.ok) {
+                    const errorText = await verifyResponse.text();
+                    console.error('Verify response not OK:', verifyResponse.status, errorText);
+                    throw new Error(`Server returned ${verifyResponse.status}: ${errorText}`);
+                }
+
+                const verifyData = await verifyResponse.json();
+                console.log('Verification response:', verifyData);
+
+                if (verifyData.success && verifyData.token) {
+                    // Store token
+                    localStorage.setItem('mecp_auth_token', verifyData.token);
+                    localStorage.setItem('mecp_auth_expires', verifyData.expires_at);
+                    
+                    console.log('Token stored:', verifyData.token.substring(0, 20) + '...');
+                    console.log('Expires at:', verifyData.expires_at);
+                    
+                    // Show success and redirect
+                    signBtn.innerHTML = '<span>✅ Authenticated</span>';
+                    signBtn.style.background = '#4caf50';
+                    signBtn.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        console.log('Redirecting to dashboard...');
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    console.error('Authentication failed:', verifyData);
+                    throw new Error(verifyData.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Signing error:', error);
+                showError('Authentication failed: ' + error.message);
+            } finally {
+                setButtonLoading(signBtn, false);
+            }
+        });
+
+        // Listen for account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected wallet
+                    resetUI();
+                } else if (accounts[0] !== userAddress) {
+                    // User switched account
+                    userAddress = accounts[0];
+                    walletAddress.textContent = userAddress;
+                    signBtn.disabled = false;
+                    showError('Account changed. Please sign message again.');
+                }
+            });
+        }
+
+        // Helper functions
+        function setButtonLoading(button, loading) {
+            if (loading) {
+                button.dataset.originalHTML = button.innerHTML;
+                button.innerHTML = '<div class="spinner"></div><span>Processing...</span>';
+                button.disabled = true;
+            } else {
+                button.innerHTML = button.dataset.originalHTML || button.innerHTML;
+                button.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function clearError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function resetUI() {
+            userAddress = null;
+            challengeMessage = null;
+            walletInfo.classList.add('hidden');
+            connectBtn.innerHTML = '<span>🦊 Connect MetaMask</span>';
+            connectBtn.disabled = false;
+            signBtn.disabled = true;
+            signBtn.innerHTML = '<span>✍️ Sign Message</span>';
+            signBtn.style.background = '';
+            signBtn.style.color = '';
+        }
+    </script>
+</body>
+</html>

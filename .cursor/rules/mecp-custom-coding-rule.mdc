@@ -1,0 +1,177 @@
+---
+name: mecp-custom-coding-rule
+description: This is a new rule
+---
+
+# MeCP Test-Driven Development Rules
+
+## Overview
+These rules enforce test-driven development practices for the MeCP (Modular Context Protocol) project to ensure code quality and prevent regressions.
+
+## Core Principles
+
+### 1. Test-First Development
+- **ALWAYS** write or update tests BEFORE implementing new features
+- Every new endpoint, resource, tool, or prompt MUST have corresponding integration tests
+- Tests should verify both success cases and error handling
+
+### 2. Regression Prevention
+- **ALWAYS** run the full test suite after ANY code generation or modification
+- If ANY test fails, fix it immediately before proceeding
+- Never commit code that breaks existing tests
+- Use `cargo test` to run all unit and integration tests
+
+### 3. Test Coverage Requirements
+
+#### For New Resources:
+- Test resource metadata retrieval
+- Test resource content reading
+- Test resource listing in `/resources/list` endpoint
+- Test resource reading via `/resources/read` endpoint
+- Test error cases (non-existent resources, invalid URIs)
+
+#### For New Tools:
+- Test tool metadata retrieval  
+- Test tool execution with valid parameters
+- Test tool execution with invalid/missing parameters
+- Test tool listing in `/tools/list` endpoint
+- Test tool calling via `/tools/call` endpoint
+- Test error handling and edge cases
+
+#### For New Prompts:
+- Test prompt metadata retrieval
+- Test prompt generation with default arguments
+- Test prompt generation with custom arguments
+- Test prompt listing in `/prompts/list` endpoint
+- Test prompt generation via `/prompts/get` endpoint
+- Test various argument combinations
+
+#### For Database Connectors:
+- Test connection establishment
+- Test connection failure scenarios
+- Test CRUD operations (Create, Read, Update, Delete)
+- Test query functionality
+- Test transaction support (for SQL databases)
+- Test concurrent access
+- Mock external dependencies in tests
+
+#### For LLM Providers:
+- Test initialization with valid/invalid credentials
+- Test completion generation
+- Test streaming functionality
+- Test token usage tracking
+- Test error handling (rate limits, API errors)
+- Test timeout handling
+
+### 4. Integration Test Structure
+
+All integration tests should follow this pattern:
+
+```rust
+#[tokio::test]
+async fn test_feature_name() {
+    // Arrange: Set up test client and data
+    let client = TestClient::new().await;
+    
+    // Act: Perform the action
+    let response = client.some_action().await;
+    
+    // Assert: Verify the response
+    assert_eq!(response["jsonrpc"], "2.0");
+    assert!(response["result"].is_object());
+    // Additional assertions...
+}
+```
+
+### 5. Test Execution Workflow
+
+**MANDATORY steps after each code change:**
+
+1. **Run all tests**: `cargo test`
+2. **Check for failures**: If any test fails, STOP and fix it
+3. **Verify new feature**: Ensure new tests pass
+4. **Check coverage**: Verify all code paths are tested
+5. **Document**: Update test documentation if needed
+
+### 6. Endpoint Testing Requirements
+
+Every MCP endpoint MUST be tested for:
+
+- ✅ **Valid requests**: Correct parameters, expected success response
+- ✅ **Invalid requests**: Missing parameters, malformed data
+- ✅ **Error responses**: Proper JSON-RPC error format (code, message)
+- ✅ **Response format**: Correct JSON-RPC 2.0 structure
+- ✅ **Response content**: All expected fields present and correct types
+- ✅ **Edge cases**: Empty lists, null values, boundary conditions
+
+### 7. Test Data Management
+
+- Use mock implementations for external dependencies
+- Create reusable test fixtures in `tests/common/`
+- Keep test data minimal but representative
+- Clean up test data after tests complete
+
+### 8. Continuous Integration
+
+- All tests must pass before code review
+- Run tests in CI/CD pipeline
+- Monitor test execution time
+- Maintain test independence (no shared state between tests)
+
+### 9. Error Message Testing
+
+- Verify error messages are clear and actionable
+- Test that error codes follow JSON-RPC 2.0 standard:
+  - `-32700`: Parse error
+  - `-32600`: Invalid request
+  - `-32601`: Method not found
+  - `-32602`: Invalid params
+  - `-32603`: Internal error
+
+### 10. Performance Testing
+
+For critical endpoints, include tests for:
+- Response time under normal load
+- Concurrent request handling
+- Memory usage patterns
+- Resource cleanup
+
+## Command Reference
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific test
+cargo test test_name
+
+# Run with output
+cargo test -- --nocapture
+
+# Run integration tests only
+cargo test --test integration_test
+
+# Run with logging
+RUST_LOG=debug cargo test
+
+# Check test coverage (requires cargo-tarpaulin)
+cargo tarpaulin --out Html
+```
+
+## Breaking Changes Protocol
+
+If a change breaks existing tests:
+
+1. **Analyze**: Understand why the test failed
+2. **Decide**: Is it a bug in the code or outdated test?
+3. **Fix**: Update either code or test appropriately
+4. **Document**: Explain the change in commit message
+5. **Verify**: Ensure ALL tests pass before committing
+
+## Test Maintenance
+
+- Review and update tests quarterly
+- Remove obsolete tests
+- Refactor duplicated test code
+- Keep test documentation current
+- Monitor test reliability (flaky tests)

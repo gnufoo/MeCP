@@ -1,0 +1,64 @@
+# MeCP Database Configuration
+# This file contains connection settings for all database services
+
+[mysql]
+enabled = true
+host = "localhost"
+port = 3306
+database = "mecp_db"
+username = "mecp_user"
+password = "mecp_password"
+# Connection pool settings
+pool_min = 5
+pool_max = 20
+connect_timeout = 30
+
+[neo4j]
+enabled = true
+host = "localhost"
+port = 7687
+# Bolt protocol URL
+bolt_url = "bolt://localhost:7687"
+# HTTP URL for REST API
+http_url = "http://localhost:7474"
+username = "neo4j"
+password = "mecp_neo4j_password"
+database = "neo4j"
+encrypted = false
+
+[milvus]
+enabled = true  # Milvus is a local vector database (runs via Docker)
+host = "localhost"
+port = 19530  # Default Milvus gRPC port
+collection_name = "mecp_vectors"
+dimension = 384  # Adjust based on your embedding model
+metric = "L2"  # L2 (Euclidean), IP (Inner Product), or COSINE
+index_type = "IVF_FLAT"  # IVF_FLAT, IVF_SQ8, IVF_PQ, HNSW, etc.
+
+[server]
+host = "0.0.0.0"
+port = 8080
+log_level = "info"  # trace, debug, info, warn, error
+
+[auth]
+# Web3 Authentication Settings
+enabled = true
+# EVM address allowed to access dashboard (checksum format)
+allowed_address = "0x2F5989AF501F5879Bb059d5af51e8b204717a9D9"  # Replace with your wallet address
+# JWT secret for signing session tokens (generate with: openssl rand -hex 32)
+jwt_secret = "69c6f05666d792ed776c65ff511b3a036b7d3c9ae15a9d078cb028d56d631c77"
+# Session token validity in seconds (86400 = 24 hours)
+session_duration = 86400
+
+[services]
+# Paths for service management (WSL/Linux)
+mysql_service = "mysql"
+neo4j_home = "/var/lib/neo4j"
+neo4j_service = "neo4j"
+
+# Data directories for reset functionality
+mysql_data_dir = "/var/lib/mysql"
+neo4j_data_dir = "/var/lib/neo4j/data"
+
+# Backup directory for reset operations
+backup_dir = "./backups"

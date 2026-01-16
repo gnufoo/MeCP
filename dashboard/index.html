@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeCP Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-value.success {
+            color: #10b981;
+        }
+
+        .stat-value.error {
+            color: #ef4444;
+        }
+
+        .stat-value.warning {
+            color: #f59e0b;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .method-tag {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .method-post {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .method-get {
+            background: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-offline {
+            background: #ef4444;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            gap: 10px;
+            padding: 20px 0;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            min-height: 20px;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75em;
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .last-update {
+            text-align: right;
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .expand-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+
+        .expand-btn:hover {
+            background: #5568d3;
+        }
+
+        .expand-btn:active {
+            transform: scale(0.95);
+        }
+
+        .detail-row {
+            display: none;
+            background: #f8f9fa;
+        }
+
+        .detail-row.visible {
+            display: table-row;
+        }
+
+        .detail-content {
+            padding: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .json-viewer {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .json-viewer pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .copy-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #38a169;
+        }
+
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="status-indicator status-online" id="statusIndicator"></span>
+                MeCP Monitoring Dashboard
+            </h1>
+            <p class="subtitle">Real-time monitoring and metrics for Model Context Protocol</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Calls</div>
+                <div class="stat-value" id="totalCalls">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Success Rate</div>
+                <div class="stat-value success" id="successRate">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Errors</div>
+                <div class="stat-value error" id="totalErrors">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Response Time</div>
+                <div class="stat-value" id="avgDuration">0ms</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Endpoint Metrics</h2>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div class="auto-refresh">
+                        <input type="checkbox" id="autoRefresh" checked>
+                        <label for="autoRefresh">Auto-refresh (5s)</label>
+                    </div>
+                    <button class="refresh-btn" onclick="refreshData()">Refresh Now</button>
+                </div>
+            </div>
+            <div id="metricsTable">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading metrics...
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Recent API Calls</h2>
+            </div>
+            <div id="logsTable">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading logs...
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Errors</h2>
+            </div>
+            <div id="errorsTable">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading errors...
+                </div>
+            </div>
+        </div>
+
+        <div class="last-update" id="lastUpdate"></div>
+    </div>
+
+    <script>
+        let autoRefreshInterval;
+        // Track which details are expanded
+        let expandedLogs = new Set();
+        let expandedErrors = new Set();
+
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('totalCalls').textContent = data.total_calls;
+                document.getElementById('successRate').textContent = data.success_rate.toFixed(1) + '%';
+                document.getElementById('totalErrors').textContent = data.total_errors;
+                document.getElementById('avgDuration').textContent = Math.round(data.avg_duration_ms) + 'ms';
+                
+                const successRate = parseFloat(data.success_rate);
+                const successRateEl = document.getElementById('successRate');
+                successRateEl.className = 'stat-value ' + (successRate >= 95 ? 'success' : successRate >= 80 ? 'warning' : 'error');
+                
+                document.getElementById('statusIndicator').className = 'status-indicator status-online';
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                document.getElementById('statusIndicator').className = 'status-indicator status-offline';
+            }
+        }
+
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+                
+                const container = document.getElementById('metricsTable');
+                
+                if (data.metrics.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No metrics available yet</div>';
+                    return;
+                }
+                
+                let html = '<table><thead><tr>';
+                html += '<th>Method</th>';
+                html += '<th>Endpoint</th>';
+                html += '<th>Total Calls</th>';
+                html += '<th>Success</th>';
+                html += '<th>Failed</th>';
+                html += '<th>Avg Duration</th>';
+                html += '<th>Last Called</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.metrics.forEach(metric => {
+                    html += '<tr>';
+                    html += `<td><span class="method-tag method-post">${metric.method}</span></td>`;
+                    html += `<td><code>${metric.endpoint}</code></td>`;
+                    html += `<td>${metric.total_calls}</td>`;
+                    html += `<td><span class="badge badge-success">${metric.successful_calls}</span></td>`;
+                    html += `<td>${metric.failed_calls > 0 ? '<span class="badge badge-error">' + metric.failed_calls + '</span>' : '0'}</td>`;
+                    html += `<td>${Math.round(metric.avg_duration_ms)}ms</td>`;
+                    html += `<td class="timestamp">${metric.last_called ? formatTimestamp(metric.last_called) : 'N/A'}</td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                document.getElementById('metricsTable').innerHTML = '<div class="empty-state">Error loading metrics</div>';
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                
+                const container = document.getElementById('logsTable');
+                
+                if (data.logs.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No logs available yet</div>';
+                    return;
+                }
+                
+                let html = '<table><thead><tr>';
+                html += '<th>Timestamp</th>';
+                html += '<th>Method</th>';
+                html += '<th>Endpoint</th>';
+                html += '<th>Status</th>';
+                html += '<th>Duration</th>';
+                html += '<th>Actions</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.logs.forEach((log, index) => {
+                    // Use database ID if available, otherwise use timestamp + index for uniqueness
+                    const uniqueId = log.id || `${log.timestamp}-${index}`;
+                    const logId = `log-${uniqueId}`;
+                    html += `<tr onclick="toggleDetails('${logId}', event)" style="cursor: pointer;" id="row-${logId}">`;
+                    html += `<td class="timestamp">${formatTimestamp(log.timestamp)}</td>`;
+                    html += `<td><span class="method-tag method-post">${log.method}</span></td>`;
+                    html += `<td><code>${log.endpoint}</code></td>`;
+                    html += `<td><span class="badge ${log.response_status === 'success' ? 'badge-success' : 'badge-error'}">${log.response_status}</span></td>`;
+                    html += `<td>${log.duration_ms}ms</td>`;
+                    html += `<td><button class="expand-btn" id="btn-${logId}" onclick="toggleDetails('${logId}', event)">View Details</button></td>`;
+                    html += '</tr>';
+                    
+                    // Detail row
+                    html += `<tr id="${logId}" class="detail-row">`;
+                    html += '<td colspan="6"><div class="detail-content">';
+                    html += '<div class="detail-grid">';
+                    
+                    // Request section
+                    html += '<div class="detail-section">';
+                    html += '<div class="detail-title">Request Parameters';
+                    html += `<button class="copy-btn" onclick="copyToClipboard('${logId}-request', event)">Copy</button>`;
+                    html += '</div>';
+                    if (log.request_params) {
+                        html += `<div class="json-viewer"><pre id="${logId}-request">${formatJSON(log.request_params)}</pre></div>`;
+                    } else {
+                        html += '<div class="no-data">No parameters</div>';
+                    }
+                    html += '</div>';
+                    
+                    // Response section
+                    html += '<div class="detail-section">';
+                    html += '<div class="detail-title">Response Data';
+                    html += `<button class="copy-btn" onclick="copyToClipboard('${logId}-response', event)">Copy</button>`;
+                    html += '</div>';
+                    if (log.response_data) {
+                        html += `<div class="json-viewer"><pre id="${logId}-response">${formatJSON(log.response_data)}</pre></div>`;
+                    } else {
+                        html += '<div class="no-data">No response data</div>';
+                    }
+                    html += '</div>';
+                    
+                    html += '</div>'; // end detail-grid
+                    
+                    // Additional info
+                    html += '<div class="detail-section" style="margin-top: 20px;">';
+                    html += '<div class="detail-title">Additional Information</div>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.9em;">';
+                    html += `<div><strong>ID:</strong> ${log.id || 'N/A'}</div>`;
+                    html += `<div><strong>Timestamp:</strong> ${formatTimestamp(log.timestamp)}</div>`;
+                    html += `<div><strong>Duration:</strong> ${log.duration_ms}ms</div>`;
+                    html += `<div><strong>Status:</strong> ${log.response_status}</div>`;
+                    if (log.error_message) {
+                        html += `<div style="grid-column: 1 / -1;"><strong>Error:</strong> <span class="error-message">${log.error_message}</span></div>`;
+                    }
+                    if (log.client_info) {
+                        html += `<div><strong>Client:</strong> ${log.client_info}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '</div></td>'; // end detail-content
+                    html += '</tr>'; // end detail-row
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                
+                // Restore expanded state after rebuilding table
+                restoreExpandedState();
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                document.getElementById('logsTable').innerHTML = '<div class="empty-state">Error loading logs</div>';
+            }
+        }
+
+        async function fetchErrors() {
+            try {
+                const response = await fetch('/api/errors');
+                const data = await response.json();
+                
+                const container = document.getElementById('errorsTable');
+                
+                if (data.errors.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No errors - Great job! 🎉</div>';
+                    return;
+                }
+                
+                let html = '<table><thead><tr>';
+                html += '<th>Timestamp</th>';
+                html += '<th>Method</th>';
+                html += '<th>Endpoint</th>';
+                html += '<th>Error Message</th>';
+                html += '<th>Duration</th>';
+                html += '<th>Actions</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.errors.forEach((error, index) => {
+                    // Use database ID if available, otherwise use timestamp + index for uniqueness
+                    const uniqueId = error.id || `${error.timestamp}-${index}`;
+                    const errorId = `error-${uniqueId}`;
+                    html += `<tr onclick="toggleDetails('${errorId}', event)" style="cursor: pointer;" id="row-${errorId}">`;
+                    html += `<td class="timestamp">${formatTimestamp(error.timestamp)}</td>`;
+                    html += `<td><span class="method-tag method-post">${error.method}</span></td>`;
+                    html += `<td><code>${error.endpoint}</code></td>`;
+                    html += `<td><span class="error-message">${error.error_message || 'Unknown error'}</span></td>`;
+                    html += `<td>${error.duration_ms}ms</td>`;
+                    html += `<td><button class="expand-btn" id="btn-${errorId}" onclick="toggleDetails('${errorId}', event)">View Details</button></td>`;
+                    html += '</tr>';
+                    
+                    // Detail row
+                    html += `<tr id="${errorId}" class="detail-row">`;
+                    html += '<td colspan="6"><div class="detail-content">';
+                    html += '<div class="detail-grid">';
+                    
+                    // Request section
+                    html += '<div class="detail-section">';
+                    html += '<div class="detail-title">Request Parameters';
+                    html += `<button class="copy-btn" onclick="copyToClipboard('${errorId}-request', event)">Copy</button>`;
+                    html += '</div>';
+                    if (error.request_params) {
+                        html += `<div class="json-viewer"><pre id="${errorId}-request">${formatJSON(error.request_params)}</pre></div>`;
+                    } else {
+                        html += '<div class="no-data">No parameters</div>';
+                    }
+                    html += '</div>';
+                    
+                    // Response section
+                    html += '<div class="detail-section">';
+                    html += '<div class="detail-title">Error Response';
+                    html += `<button class="copy-btn" onclick="copyToClipboard('${errorId}-response', event)">Copy</button>`;
+                    html += '</div>';
+                    if (error.response_data) {
+                        html += `<div class="json-viewer"><pre id="${errorId}-response">${formatJSON(error.response_data)}</pre></div>`;
+                    } else {
+                        html += '<div class="no-data">No response data</div>';
+                    }
+                    html += '</div>';
+                    
+                    html += '</div>'; // end detail-grid
+                    
+                    // Additional info
+                    html += '<div class="detail-section" style="margin-top: 20px;">';
+                    html += '<div class="detail-title">Error Details</div>';
+                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.9em;">';
+                    html += `<div><strong>ID:</strong> ${error.id || 'N/A'}</div>`;
+                    html += `<div><strong>Timestamp:</strong> ${formatTimestamp(error.timestamp)}</div>`;
+                    html += `<div><strong>Duration:</strong> ${error.duration_ms}ms</div>`;
+                    html += `<div style="grid-column: 1 / -1;"><strong>Error Message:</strong> <span class="error-message">${error.error_message || 'Unknown error'}</span></div>`;
+                    if (error.client_info) {
+                        html += `<div><strong>Client:</strong> ${error.client_info}</div>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '</div></td>'; // end detail-content
+                    html += '</tr>'; // end detail-row
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                
+                // Restore expanded state after rebuilding table
+                restoreExpandedState();
+            } catch (error) {
+                console.error('Error fetching errors:', error);
+                document.getElementById('errorsTable').innerHTML = '<div class="empty-state">Error loading error logs</div>';
+            }
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        function formatJSON(jsonString) {
+            try {
+                const obj = JSON.parse(jsonString);
+                return JSON.stringify(obj, null, 2);
+            } catch (e) {
+                return jsonString;
+            }
+        }
+
+        function toggleDetails(id, event) {
+            if (event) {
+                event.stopPropagation();
+                // Prevent default action to ensure manual control
+                event.preventDefault();
+            }
+            const detailRow = document.getElementById(id);
+            if (detailRow) {
+                const isVisible = detailRow.classList.contains('visible');
+                // Toggle the visibility
+                if (isVisible) {
+                    detailRow.classList.remove('visible');
+                    // Remove from tracking
+                    if (id.startsWith('log-')) {
+                        expandedLogs.delete(id);
+                    } else if (id.startsWith('error-')) {
+                        expandedErrors.delete(id);
+                    }
+                } else {
+                    detailRow.classList.add('visible');
+                    // Add to tracking
+                    if (id.startsWith('log-')) {
+                        expandedLogs.add(id);
+                    } else if (id.startsWith('error-')) {
+                        expandedErrors.add(id);
+                    }
+                }
+            }
+        }
+        
+        function restoreExpandedState() {
+            // Restore expanded logs
+            expandedLogs.forEach(id => {
+                const detailRow = document.getElementById(id);
+                if (detailRow) {
+                    detailRow.classList.add('visible');
+                }
+            });
+            
+            // Restore expanded errors
+            expandedErrors.forEach(id => {
+                const detailRow = document.getElementById(id);
+                if (detailRow) {
+                    detailRow.classList.add('visible');
+                }
+            });
+        }
+
+        function copyToClipboard(elementId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const element = document.getElementById(elementId);
+            if (element) {
+                const text = element.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.style.background = '#38a169';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy to clipboard');
+                });
+            }
+        }
+
+        async function refreshData() {
+            await Promise.all([
+                fetchStats(),
+                fetchMetrics(),
+                fetchLogs(),
+                fetchErrors()
+            ]);
+            
+            const now = new Date().toLocaleString();
+            document.getElementById('lastUpdate').textContent = `Last updated: ${now}`;
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshData, 5000);
+            } else {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+
+        // Helper function to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('mecp_auth_token');
+            if (token) {
+                return {
+                    'Authorization': `Bearer ${token}`
+                };
+            }
+            return {};
+        }
+
+        // Helper function to redirect to login
+        function redirectToLogin(reason) {
+            console.log('Redirecting to login:', reason);
+            localStorage.removeItem('mecp_auth_token');
+            localStorage.removeItem('mecp_auth_expires');
+            window.location.href = '/login';
+        }
+
+        // Override fetch to include auth token
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const [url, options = {}] = args;
+            
+            // Only add auth header to API calls
+            if (typeof url === 'string' && url.startsWith('/api/')) {
+                options.headers = {
+                    ...options.headers,
+                    ...getAuthHeaders()
+                };
+            }
+            
+            return originalFetch(url, options).then(response => {
+                // Check if authentication failed
+                if (response.status === 401) {
+                    redirectToLogin('API returned 401 Unauthorized');
+                }
+                return response;
+            });
+        };
+
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('mecp_auth_token');
+            const expires = localStorage.getItem('mecp_auth_expires');
+            
+            // If no token, redirect to login immediately
+            if (!token) {
+                redirectToLogin('No authentication token found');
+                return;
+            }
+            
+            // Check if token is expired
+            if (expires) {
+                const expiresDate = new Date(expires);
+                if (expiresDate < new Date()) {
+                    redirectToLogin('Token expired');
+                    return;
+                }
+            }
+            
+            // Verify token is still valid by making a test API call
+            try {
+                const response = await fetch('/api/stats', {
+                    headers: getAuthHeaders()
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        redirectToLogin('Token validation failed');
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to verify token:', error);
+                // Don't redirect on network errors, only on auth failures
+            }
+        });
+
+        // Initialize
+        document.getElementById('autoRefresh').addEventListener('change', toggleAutoRefresh);
+        
+        // Load data on page load
+        refreshData();
+        
+        // Start auto-refresh
+        autoRefreshInterval = setInterval(refreshData, 5000);
+    </script>
+</body>
+</html>
