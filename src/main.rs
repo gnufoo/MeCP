@@ -24,6 +24,9 @@ async fn main() -> Result<()> {
     
     // Register tools
     server.register_tool(Box::new(tools::mock::HelloWorldTool::new())).await;
+    // Required tools for ChatGPT Connectors and deep research
+    server.register_tool(Box::new(tools::mock::SearchTool::new())).await;
+    server.register_tool(Box::new(tools::mock::FetchTool::new())).await;
     
     // Register prompts
     server.register_prompt(Box::new(prompts::mock::MockPrompt::new())).await;
