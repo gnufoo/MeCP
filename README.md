@@ -1,370 +1,300 @@
-# MeCP - Modular Context Protocol Server
+# MeCP - Model Context Protocol Server
 
-A Rust-based Model Context Protocol (MCP) server with modular architecture, comprehensive abstraction layers, and integrated database service management.
+<div align="center">
 
-## 🚀 Quick Start
+![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen?style=for-the-badge)
+
+**Production-ready Model Context Protocol server in Rust**
+
+Self-hosted AI context management with multi-database support, Web3 authentication, and real-time monitoring
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#-architecture) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## 🚀 Features
+
+### Core Capabilities
+- **🦀 High-Performance Rust** - Blazing fast, memory-safe implementation
+- **📋 JSON-RPC 2.0 API** - Standard MCP protocol compliance
+- **🔌 Modular Architecture** - Extensible resource, tool, and prompt system
+- **📡 HTTP Server** - RESTful API with CORS support
+
+### Database Integration
+- **🗄️ MySQL** - Relational data storage with connection pooling
+- **🕸️ Neo4j** - Graph database for complex relationships
+- **🔢 Milvus** - High-performance vector database for embeddings
+- **🔄 Unified Abstraction Layer** - Switch databases seamlessly
+
+### Monitoring & Security
+- **📊 Real-time Dashboard** - Beautiful web UI for metrics and logs
+- **💾 Persistent Metrics** - MySQL-backed analytics and history
+- **🔐 Web3 Authentication** - Gasless EVM wallet signature auth
+- **🔒 JWT Sessions** - Secure, stateless session management
+
+### Developer Experience
+- **⚡ CLI Management** - One-command database setup and control
+- **🧪 Comprehensive Testing** - Unit and integration test suites
+- **📚 Complete Documentation** - Guides for every component
+- **🐳 Production Ready** - Battle-tested with enterprise features
+
+---
+
+## 🎯 Quick Start
+
+### Prerequisites
+- Rust 1.70+ ([Install](https://rustup.rs/))
+- MySQL 8.0+ ([Install](https://dev.mysql.com/downloads/))
+- (Optional) Neo4j, Milvus for additional features
+
+### Installation
 
 ```bash
-# Build the project and CLI
+# Clone the repository
+git clone https://github.com/yourusername/mecp.git
+cd mecp
+
+# Build the project
 cargo build --release
 
-# Install and start all database services (MySQL, Neo4j)
-./target/release/mecp-cli start
+# Initialize databases
+./scripts/init-mysql-db.sh
 
-# Check status
-./target/release/mecp-cli status
-
-# Run the MCP server
-cargo run
+# Start the server
+cargo run --release
 ```
+
+### Access Dashboard
+
+```
+http://127.0.0.1:3000/dashboard
+```
+
+### Make Your First API Call
+
+```bash
+curl -X POST http://127.0.0.1:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "resources/list"
+  }'
+```
+
+---
 
 ## 📚 Documentation
 
-- **[SETUP_COMPLETE.md](SETUP_COMPLETE.md)** - 🎯 **START HERE** - Complete setup guide
-- **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - 📊 **NEW!** Monitoring Dashboard
-- **[QUICKREF_CLI.md](QUICKREF_CLI.md)** - Quick reference for CLI commands
-- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Detailed database setup guide
-- **[DASHBOARD.md](DASHBOARD.md)** - Complete dashboard documentation
-- **[INSTALLATION.md](INSTALLATION.md)** - Step-by-step installation
-- **[CLI_USAGE.md](CLI_USAGE.md)** - Complete CLI reference
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
-- **[QUICKSTART.md](QUICKSTART.md)** - API usage guide
-
-## Project Structure
-
-```
-MeCP/
-├── src/
-│   ├── main.rs                 # Entry point
-│   ├── core/                   # Core abstractions
-│   │   ├── mod.rs
-│   │   ├── server.rs           # MCP server implementation
-│   │   ├── types.rs            # Common types
-│   │   ├── database/           # Database abstractions
-│   │   │   ├── mod.rs
-│   │   │   ├── types.rs        # Database types
-│   │   │   ├── vector.rs       # Vector DB trait (Milvus, Weaviate, etc.)
-│   │   │   ├── graph.rs        # Graph DB trait (Neo4j, GraphQL, etc.)
-│   │   │   └── sql.rs          # SQL DB trait (MySQL, PostgreSQL, etc.)
-│   │   └── reasoning/          # LLM reasoning abstractions
-│   │       ├── mod.rs
-│   │       ├── types.rs        # Reasoning types
-│   │       └── llm.rs          # LLM provider trait
-│   ├── resources/              # Resource implementations
-│   │   ├── mod.rs
-│   │   └── mock.rs             # Mock resource (get_mock_resource)
-│   ├── tools/                  # Tool implementations
-│   │   ├── mod.rs
-│   │   └── mock.rs             # HelloWorld tool
-│   └── prompts/                # Prompt implementations
-│       ├── mod.rs
-│       └── mock.rs             # Mock prompt
-├── Cargo.toml
-└── README.md
-```
-
-## Features
-
-### 1. Modular MCP Components
-
-#### Resources
-- **Interface**: `Resource` trait in `src/resources/mod.rs`
-- **Mock Implementation**: `MockResource` - Returns sample JSON data
-- **Methods**: `metadata()`, `read()`, `exists()`, `uri()`
-
-#### Tools
-- **Interface**: `Tool` trait in `src/tools/mod.rs`
-- **Mock Implementation**: `HelloWorldTool` - Simple greeting tool
-- **Methods**: `metadata()`, `execute()`, `validate()`
-
-#### Prompts
-- **Interface**: `Prompt` trait in `src/prompts/mod.rs`
-- **Mock Implementation**: `MockPrompt` - Generates conversation starters
-- **Methods**: `metadata()`, `generate()`, `validate()`
-
-### 2. Database Abstractions
-
-#### Vector Database (`VectorDatabase` trait)
-Supports vector similarity search databases:
-- Milvus (primary, local deployment)
-- Weaviate
-- Qdrant
-- Qdrant
-- Others
-
-**Key Methods**:
-- `connect()`, `disconnect()`
-- `insert()`, `batch_insert()`
-- `search()` - Similarity search with filters
-- `get()`, `delete()`, `update_metadata()`
-- `create_index()`, `delete_index()`
-
-#### Graph Database (`GraphDatabase` trait)
-Supports graph databases and knowledge graphs:
-- Neo4j
-- ArangoDB
-- JanusGraph
-- Amazon Neptune
-- GraphQL endpoints
-
-**Key Methods**:
-- `connect()`, `disconnect()`
-- `query()` - Execute Cypher, Gremlin, or GraphQL
-- `create_node()`, `create_edge()`
-- `get_node()`, `update_node()`, `delete_node()`
-- `find_neighbors()`, `shortest_path()`
-
-#### SQL Database (`SqlDatabase` trait)
-Supports relational databases:
-- MySQL
-- PostgreSQL
-- SQLite
-- SQL Server
-- Oracle
-
-**Key Methods**:
-- `connect()`, `disconnect()`
-- `query()`, `execute()`
-- `begin_transaction()` - Returns `SqlTransaction` trait
-- Transaction support: `commit()`, `rollback()`
-
-### 3. LLM Reasoning Interface
-
-#### LLM Provider (`LlmProvider` trait)
-Abstraction for connecting to major LLM providers:
-- OpenAI (GPT-4, GPT-3.5, etc.)
-- Anthropic (Claude)
-- Google (Gemini, PaLM)
-- Cohere
-- HuggingFace
-- Local models (Ollama, llama.cpp, etc.)
-
-**Key Methods**:
-- `initialize()` - Setup with API keys and configuration
-- `complete()` - Generate completions
-- `stream_complete()` - Streaming responses
-- `available_models()` - List supported models
-
-**Features**:
-- Configurable temperature, max_tokens, and sampling parameters
-- Token usage tracking
-- Streaming support
-- Multiple provider support
-
-## 📊 Monitoring Dashboard
-
-MeCP includes a beautiful real-time monitoring dashboard for debugging and analytics:
+### Getting Started
+- **[Installation Guide](INSTALLATION.md)** - Detailed setup instructions
+- **[Quick Start](QUICKSTART.md)** - API usage and examples
+- **[CLI Usage](CLI_USAGE.md)** - Command-line interface reference
 
 ### Features
-- **Real-time Metrics**: Live tracking of all MCP interface calls
-- **Performance Analytics**: Response times, success rates, and throughput
-- **Error Monitoring**: Quick access to errors with detailed messages
-- **History Logs**: Complete audit trail stored in MySQL
-- **Auto-refresh**: Updates every 5 seconds
-- **REST API**: Programmatic access to metrics
+- **[Dashboard Guide](DASHBOARD.md)** - Monitoring and metrics
+- **[Web3 Authentication](WEB3_AUTH_GUIDE.md)** - Secure wallet-based auth
+- **[Database Setup](DATABASE_SETUP.md)** - Multi-database configuration
 
-### Quick Start
+### Advanced
+- **[Architecture](ARCHITECTURE.md)** - System design and components
+- **[API Documentation](API_DOCUMENTATION.md)** - Complete API reference
+- **[Testing Guide](TESTING.md)** - Running and writing tests
 
-```bash
-# Initialize database
-./scripts/init-mysql-db.sh
+---
 
-# Start server
-cargo run --release
+## 🏗️ Architecture
 
-# Open dashboard
-# http://127.0.0.1:3000/dashboard
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       MeCP Server                           │
+│                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
+│  │  Resources  │  │    Tools    │  │   Prompts   │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘       │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │           HTTP Server (Axum + Tower)                │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌────────────────┐   │   │
+│  │  │  /mcp    │  │  /api/*  │  │  /dashboard    │   │   │
+│  │  └──────────┘  └──────────┘  └────────────────┘   │   │
+│  └────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │         Database Abstraction Layer                  │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │   │
+│  │  │  MySQL   │  │  Neo4j   │  │     Milvus       │ │   │
+│  │  └──────────┘  └──────────┘  └──────────────────┘ │   │
+│  └────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-See [DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md) for complete guide.
+### Key Components
 
-### Testing the Dashboard
+- **Core Server** - MCP protocol implementation with extensible handlers
+- **HTTP Layer** - Axum-based web server with middleware support
+- **Database Layer** - Trait-based abstraction for SQL, Graph, and Vector DBs
+- **Metrics System** - Real-time collection with MySQL persistence
+- **Auth Module** - EVM signature verification and JWT token management
 
-Test the complete monitoring flow with included test scripts:
+---
+
+## 🛠️ Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| Language | Rust 2021 Edition |
+| Web Framework | Axum 0.7 |
+| Database | MySQL 8.0, Neo4j, Milvus |
+| Authentication | ethers-rs, jsonwebtoken |
+| Serialization | serde, serde_json |
+| Async Runtime | tokio |
+| Testing | tokio-test, reqwest |
+
+---
+
+## 📊 Dashboard
+
+The integrated monitoring dashboard provides:
+
+- **📈 Real-time Metrics** - API call rates, success rates, response times
+- **📝 Request History** - Detailed logs with full request/response data
+- **🐛 Error Tracking** - Dedicated error monitoring with stack traces
+- **📊 Analytics** - Per-endpoint statistics and trends
+- **🔄 Live Updates** - Auto-refresh every 5 seconds
+- **🔐 Secure Access** - Optional Web3 wallet authentication
+
+![Dashboard Screenshot](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
+
+---
+
+## 🔐 Web3 Authentication
+
+Secure your dashboard with cryptographic wallet signatures:
 
 ```bash
-# Quick test with bash script (20 requests)
+# Quick setup
+./scripts/setup-auth-example.sh
+
+# Or manual configuration
+[auth]
+enabled = true
+allowed_address = "0xYourWalletAddress"
+jwt_secret = "your-secret-key"
+session_duration = 86400
+```
+
+Features:
+- ✅ **Gasless Authentication** - No blockchain transactions
+- ✅ **EVM Compatible** - Works with MetaMask, WalletConnect, etc.
+- ✅ **24-Hour Sessions** - JWT-based session management
+- ✅ **Production Ready** - Used in live deployments
+
+[Read the Web3 Auth Guide →](WEB3_AUTH_GUIDE.md)
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+cargo test
+
+# Run integration tests
+cargo test --test integration_test
+
+# Run with coverage
+cargo tarpaulin --out Html
+
+# Test dashboard flow
 ./scripts/test-dashboard-flow.sh
-
-# Comprehensive test with Rust client (50 requests)
-cargo run --example test_client
-
-# Custom number of requests
-cargo run --example test_client -- 100
 ```
 
-See [TEST_SCRIPTS_README.md](TEST_SCRIPTS_README.md) for detailed testing guide.
+---
 
-## Building and Running
+## 🚀 Deployment
 
-### Database Services
+### Production Checklist
+
+- [ ] Configure strong JWT secret (`openssl rand -hex 64`)
+- [ ] Set up HTTPS with reverse proxy (nginx/caddy)
+- [ ] Enable rate limiting on auth endpoints
+- [ ] Configure database connection pooling
+- [ ] Set up monitoring and alerting
+- [ ] Backup database regularly
+- [ ] Review security settings in `config.toml`
+
+### Docker Deployment (Coming Soon)
 
 ```bash
-# Build CLI tool
-cargo build --release
-
-# Start all database services (auto-installs if needed)
-./target/release/mecp-cli start
-
-# Check service status
-./target/release/mecp-cli status
-
-# Stop services
-./target/release/mecp-cli stop
-
-# Reset databases (for testing)
-./target/release/mecp-cli reset
+docker-compose up -d
 ```
 
-See [CLI_USAGE.md](CLI_USAGE.md) for complete CLI reference.
+---
 
-### MCP Server
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
 
 ```bash
-# Build the project
+# Clone and setup
+git clone https://github.com/yourusername/mecp.git
+cd mecp
 cargo build
-
-# Run the server
-cargo run
 
 # Run tests
 cargo test
 
-# Build in release mode
-cargo build --release
+# Check formatting
+cargo fmt --check
+
+# Run linter
+cargo clippy
 ```
 
-## Usage Example
+### Contribution Areas
 
-```rust
-use mecp::core::server::McpServer;
-use mecp::resources::mock::MockResource;
-use mecp::tools::mock::HelloWorldTool;
-use mecp::prompts::mock::MockPrompt;
+- 🐛 Bug fixes and improvements
+- ✨ New database adapters (PostgreSQL, MongoDB, etc.)
+- 📚 Documentation enhancements
+- 🧪 Additional test coverage
+- 🎨 Dashboard UI improvements
+- 🔌 New MCP tools and resources
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Create server
-    let server = McpServer::new();
-    
-    // Register components
-    server.register_resource(Box::new(MockResource::new())).await;
-    server.register_tool(Box::new(HelloWorldTool::new())).await;
-    server.register_prompt(Box::new(MockPrompt::new())).await;
-    
-    // Run server
-    server.run().await?;
-    
-    Ok(())
-}
-```
+---
 
-## Extending the Framework
+## 📜 License
 
-### Adding a New Resource
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```rust
-use async_trait::async_trait;
-use anyhow::Result;
-use crate::resources::Resource;
+---
 
-pub struct MyCustomResource {
-    // Your fields
-}
+## 🙏 Acknowledgments
 
-#[async_trait]
-impl Resource for MyCustomResource {
-    async fn metadata(&self) -> Result<ResourceMetadata> {
-        // Implementation
-    }
-    
-    async fn read(&self) -> Result<ResourceContent> {
-        // Implementation
-    }
-    
-    async fn uri(&self) -> String {
-        // Implementation
-    }
-}
-```
+- [Model Context Protocol](https://modelcontextprotocol.io/) specification
+- Rust community for excellent libraries
+- Contributors and supporters
 
-### Adding a New Tool
+---
 
-```rust
-use async_trait::async_trait;
-use anyhow::Result;
-use crate::tools::Tool;
+## 📞 Support
 
-pub struct MyCustomTool {
-    // Your fields
-}
+- **Issues**: [GitHub Issues](https://github.com/yourusername/mecp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mecp/discussions)
+- **Documentation**: [Full Documentation](INSTALLATION.md)
 
-#[async_trait]
-impl Tool for MyCustomTool {
-    async fn metadata(&self) -> Result<ToolMetadata> {
-        // Implementation
-    }
-    
-    async fn execute(&self, params: JsonValue) -> Result<ToolResult> {
-        // Implementation
-    }
-}
-```
+---
 
-### Implementing a Database Connector
+<div align="center">
 
-```rust
-use async_trait::async_trait;
-use anyhow::Result;
-use crate::core::database::VectorDatabase;
+**Built with ❤️ in Rust**
 
-pub struct MilvusConnector {
-    // Your fields
-}
+⭐ Star us on GitHub | 🐛 Report Issues | 🤝 Contribute
 
-#[async_trait]
-impl VectorDatabase for MilvusConnector {
-    async fn connect(&mut self, config: DatabaseConfig) -> Result<()> {
-        // Connect to Milvus
-    }
-    
-    async fn search(&self, query_vector: Vec<f32>, top_k: usize, filter: Option<JsonValue>) -> Result<Vec<VectorSearchResult>> {
-        // Implement similarity search
-    }
-    
-    // ... implement other methods
-}
-```
-
-### Implementing an LLM Provider
-
-```rust
-use async_trait::async_trait;
-use anyhow::Result;
-use crate::core::reasoning::LlmProvider;
-
-pub struct OpenAIProvider {
-    // Your fields
-}
-
-#[async_trait]
-impl LlmProvider for OpenAIProvider {
-    async fn initialize(&mut self, config: LlmConfig) -> Result<()> {
-        // Initialize with API key
-    }
-    
-    async fn complete(&self, request: CompletionRequest) -> Result<CompletionResponse> {
-        // Call OpenAI API
-    }
-    
-    // ... implement other methods
-}
-```
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+</div>

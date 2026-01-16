@@ -1,6 +1,54 @@
+# Rust
 /target/
+**/*.rs.bk
+*.pdb
 Cargo.lock
+
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
 .DS_Store
+
+# Config (contains secrets)
+config.toml.backup
+*.local.toml
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup
+backups/
+*.backup
+
+# Environment
+.env
+.env.local
+
+# Build artifacts
+/build/
+/dist/
+
+# Testing
+/coverage/
+*.profraw
+
+# Documentation build
+/book/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
