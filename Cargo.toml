@@ -50,6 +50,10 @@ name = "test_client"
 path = "examples/test_client.rs"
 
 [[bin]]
+name = "mecp"
+path = "src/main.rs"
+
+[[bin]]
 name = "mecp-cli"
 path = "src/bin/mecp-cli.rs"
 

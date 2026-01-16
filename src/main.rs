@@ -58,7 +58,9 @@ async fn main() -> Result<()> {
     };
     
     // Get port from environment or use default
-    let port: u16 = env::var("MCP_PORT")
+    // Railway uses PORT, but we also support MCP_PORT for local development
+    let port: u16 = env::var("PORT")
+        .or_else(|_| env::var("MCP_PORT"))
         .unwrap_or_else(|_| "3000".to_string())
         .parse()
         .unwrap_or(3000);
