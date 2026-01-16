@@ -73,6 +73,17 @@
 - ✅ Contributing guide
 - ✅ License file
 
+## 📝 Deployment & Workflow Documentation
+
+Deployment guides, troubleshooting, and workflow-specific documentation are located in the [`memo/`](memo/) folder:
+
+- Deployment guides (GCE, Cloudflare, HTTPS setup)
+- Troubleshooting guides
+- Integration guides (ChatGPT Connectors)
+- Workflow documentation
+
+See [`memo/README.md`](memo/README.md) for details.
+
 ## 🔗 External Resources
 
 - [Model Context Protocol Specification](https://modelcontextprotocol.io/)
