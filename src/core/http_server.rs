@@ -32,24 +32,27 @@ pub struct HttpServer {
     mcp_server: Arc<McpServer>,
     metrics: Arc<MetricsCollector>,
     auth: Option<Arc<AuthService>>,
+    host: String,
     port: u16,
 }
 
 impl HttpServer {
-    pub fn new(mcp_server: Arc<McpServer>, port: u16) -> Self {
+    pub fn new(mcp_server: Arc<McpServer>, host: String, port: u16) -> Self {
         Self { 
             mcp_server,
             metrics: Arc::new(MetricsCollector::new()),
             auth: None,
+            host,
             port 
         }
     }
 
-    pub fn with_metrics(mcp_server: Arc<McpServer>, metrics: Arc<MetricsCollector>, port: u16) -> Self {
+    pub fn with_metrics(mcp_server: Arc<McpServer>, metrics: Arc<MetricsCollector>, host: String, port: u16) -> Self {
         Self { 
             mcp_server,
             metrics,
             auth: None,
+            host,
             port 
         }
     }
@@ -102,7 +105,7 @@ impl HttpServer {
             .layer(CorsLayer::permissive())
             .with_state(state);
 
-        let addr = format!("127.0.0.1:{}", self.port);
+        let addr = format!("{}:{}", self.host, self.port);
         info!("MCP HTTP Server starting on {}", addr);
         info!("Dashboard available at http://{}/dashboard", addr);
         

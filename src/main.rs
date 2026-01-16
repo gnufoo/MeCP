@@ -57,18 +57,21 @@ async fn main() -> Result<()> {
         Arc::new(crate::core::metrics::MetricsCollector::new())
     };
     
-    // Get port from environment or use default
+    // Get port from environment or use config
     // Railway uses PORT, but we also support MCP_PORT for local development
     let port: u16 = env::var("PORT")
         .or_else(|_| env::var("MCP_PORT"))
-        .unwrap_or_else(|_| "3000".to_string())
+        .unwrap_or_else(|_| config.server.port.to_string())
         .parse()
-        .unwrap_or(3000);
+        .unwrap_or(config.server.port);
     
-    println!("\nStarting HTTP server on port {}...", port);
-    println!("API endpoint: http://127.0.0.1:{}/mcp", port);
-    println!("Health check: http://127.0.0.1:{}/health", port);
-    println!("Dashboard: http://127.0.0.1:{}/dashboard\n", port);
+    // Get host from config
+    let host = config.server.host.clone();
+    
+    println!("\nStarting HTTP server on {}:{}...", host, port);
+    println!("API endpoint: http://{}:{}/mcp", host, port);
+    println!("Health check: http://{}:{}/health", host, port);
+    println!("Dashboard: http://{}:{}/dashboard\n", host, port);
     
     // Initialize authentication if configured
     let auth_service = if let Some(auth_config) = &config.auth {
@@ -94,7 +97,7 @@ async fn main() -> Result<()> {
     };
     
     // Start the HTTP server with metrics and auth
-    let mut http_server = crate::core::http_server::HttpServer::with_metrics(server.clone(), metrics, port);
+    let mut http_server = crate::core::http_server::HttpServer::with_metrics(server.clone(), metrics, host, port);
     if let Some(auth) = auth_service {
         http_server = http_server.with_auth(auth);
     }

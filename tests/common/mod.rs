@@ -31,7 +31,7 @@ lazy_static! {
                     .await;
                 
                 // Start HTTP server
-                let http_server = mecp::core::http_server::HttpServer::new(server, TEST_SERVER_PORT);
+                let http_server = mecp::core::http_server::HttpServer::new(server, "127.0.0.1".to_string(), TEST_SERVER_PORT);
                 
                 println!("✓ Test server starting on port {}", TEST_SERVER_PORT);
                 
