@@ -1,0 +1,38 @@
+package mecp:kv-storage;
+
+/// Key-Value storage interface for MeCP applications
+/// 
+/// This interface provides persistent storage for WebAssembly Components.
+/// Data is stored in Redis with automatic namespace isolation per application instance.
+interface kv-storage {
+    /// Query (get) a value by key
+    /// Returns the value if found, or null if the key doesn't exist
+    query: func(key: string) -> result<option<string>, string>;
+    
+    /// Store (set) a value by key
+    /// Returns true on success, or an error message on failure
+    store: func(key: string, value: string) -> result<bool, string>;
+    
+    /// Store a value with TTL (time-to-live) in seconds
+    /// Returns true on success, or an error message on failure
+    store-with-ttl: func(key: string, value: string, ttl-seconds: u64) -> result<bool, string>;
+    
+    /// Delete a key
+    /// Returns true if the key was deleted, false if it didn't exist
+    delete: func(key: string) -> result<bool, string>;
+    
+    /// Check if a key exists
+    exists: func(key: string) -> result<bool, string>;
+    
+    /// List all keys matching a pattern (supports * wildcard)
+    /// Returns a list of matching keys (without the namespace prefix)
+    keys: func(pattern: string) -> result<list<string>, string>;
+    
+    /// Increment a numeric value
+    /// Returns the new value after incrementing
+    increment: func(key: string) -> result<s64, string>;
+    
+    /// Increment by a specific amount
+    /// Returns the new value after incrementing
+    increment-by: func(key: string, amount: s64) -> result<s64, string>;
+}

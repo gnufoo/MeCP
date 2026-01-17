@@ -1,0 +1,3 @@
+[submodule "wassette"]
+	path = wassette
+	url = https://github.com/microsoft/wassette.git
