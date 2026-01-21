@@ -60,7 +60,9 @@ async fn main() -> Result<()> {
         Arc::new(crate::core::metrics::MetricsCollector::new())
     };
     
-    // Initialize app loader for marketplace FIRST (needed by connector)
+    // TODO: Initialize app loader for marketplace FIRST (needed by connector)
+    // Feature not yet implemented - app_loader module missing
+    /*
     let app_loader = if config.mysql.enabled {
         println!("📦 Initializing Application Marketplace...");
         match crate::core::app_loader::AppLoader::new(&config.mysql).await {
@@ -80,25 +82,34 @@ async fn main() -> Result<()> {
         println!("⚠️  Application Marketplace disabled (MySQL required)");
         None
     };
-    
-    // Initialize the WASM KV Store MySQL persistence if MySQL is enabled
+    */
+
+    // TODO: Initialize the WASM KV Store MySQL persistence if MySQL is enabled
+    // Feature not yet implemented - wasm_runtime module missing
+    /*
     if config.mysql.enabled {
         if let Err(e) = crate::core::wasm_runtime::WasmKvStore::init_mysql_pool(&config.mysql).await {
             println!("⚠️  WASM KV Store MySQL initialization failed: {}", e);
             println!("   (WASM apps will use in-memory storage - data will not persist across restarts)");
         }
     }
-    
-    // Create the notification broadcaster for resource updates
+    */
+
+    // TODO: Create the notification broadcaster for resource updates
+    // Feature not yet implemented - notifications module missing
+    /*
     // This needs to be created before the connector so it can be shared
     let notifications = Arc::new(crate::core::notifications::NotificationBroadcaster::new());
     println!("📢 Notification broadcaster initialized");
-    
-    // Initialize the Cursor MCP Connector if MySQL is enabled
+    */
+
+    // TODO: Initialize the Cursor MCP Connector if MySQL is enabled
+    // Feature not yet implemented - connector module not exposed in mod.rs
+    /*
     // Note: Connector needs app_loader for WASM application support
     let connector = if config.mysql.enabled {
         println!("🔌 Initializing Cursor MCP Connector...");
-        
+
         let mut connector = if let Some(ref loader) = app_loader {
             println!("   ✅ WASM Runtime enabled with App Loader");
             crate::core::connector::CursorMcpConnector::with_app_loader(
@@ -109,10 +120,10 @@ async fn main() -> Result<()> {
             println!("   ⚠️  WASM Runtime disabled (no App Loader)");
             crate::core::connector::CursorMcpConnector::new(config.mysql.clone())
         };
-        
+
         // Set the notification broadcaster for resource updates
         connector.set_notifications(Arc::clone(&notifications));
-        
+
         // Initialize Wassette runtime if feature is enabled
         #[cfg(feature = "wassette")]
         {
@@ -120,7 +131,7 @@ async fn main() -> Result<()> {
             let component_dir = PathBuf::from("./wassette-components");
             println!("   🔧 Initializing Wassette runtime...");
             println!("      Component dir: {}", component_dir.display());
-            
+
             match connector.set_wassette_runtime_with_redis(component_dir, Some(config.redis.clone())).await {
                 Ok(()) => {
                     println!("   ✅ Wassette runtime enabled for Components");
@@ -131,12 +142,13 @@ async fn main() -> Result<()> {
                 }
             }
         }
-        
+
         Some(Arc::new(connector))
     } else {
         println!("⚠️  Per-user MCP endpoints disabled (MySQL required)");
         None
     };
+    */
     
     // Get port from environment or use config
     // Railway uses PORT, but we also support MCP_PORT for local development
@@ -154,12 +166,15 @@ async fn main() -> Result<()> {
     println!("Health check: http://{}:{}/health", host, port);
     println!("Dashboard: http://{}:{}/dashboard", host, port);
     println!("Marketplace: http://{}:{}/marketplace", host, port);
-    
+
+    // TODO: Enable when connector is available
+    /*
     if connector.is_some() {
         println!("\n📍 Per-user MCP endpoints enabled:");
         println!("   http://{}:{}/u/{{username}}/mcp", host, port);
     }
-    
+    */
+
     println!();
     
     // Initialize authentication if configured
@@ -185,7 +200,9 @@ async fn main() -> Result<()> {
         None
     };
     
-    // Initialize Vector Database (Milvus) for similarity search
+    // TODO: Initialize Vector Database (Milvus) for similarity search
+    // Feature not yet implemented - MilvusClient and MilvusConfig not available
+    /*
     let vector_db = if config.milvus.enabled {
         println!("🔍 Initializing Vector Database for similarity search...");
         let milvus_config = core::database::MilvusConfig {
@@ -196,14 +213,14 @@ async fn main() -> Result<()> {
             metric: config.milvus.metric.clone(),
         };
         let client = core::database::MilvusClient::new(milvus_config);
-        
+
         // Check if Milvus is available
         if client.check_connection().await {
             println!("   ✅ Milvus connected at {}:{}", config.milvus.host, config.milvus.port);
         } else {
             println!("   ⚠️  Milvus not available, using in-memory fallback");
         }
-        
+
         Some(Arc::new(client))
     } else {
         println!("🔍 Initializing Vector Database (in-memory mode)...");
@@ -211,28 +228,34 @@ async fn main() -> Result<()> {
         let client = core::database::MilvusClient::with_defaults();
         Some(Arc::new(client))
     };
+    */
     
-    // Start the HTTP server with metrics, auth, connector, app loader, and vector DB
-    let mut http_server = crate::core::http_server::HttpServer::with_metrics(server.clone(), metrics, host, port)
-        .with_mysql_config(config.mysql.clone())
-        .with_notifications(notifications);  // Share the same notification broadcaster
-    
+    // Start the HTTP server with metrics and optional auth
+    let mut http_server = crate::core::http_server::HttpServer::with_metrics(server.clone(), metrics, host, port);
+
     if let Some(auth) = auth_service {
         http_server = http_server.with_auth(auth);
     }
-    
+
+    // TODO: Enable when these features are implemented
+    /*
+    http_server = http_server
+        .with_mysql_config(config.mysql.clone())
+        .with_notifications(notifications);  // Share the same notification broadcaster
+
     if let Some(conn) = connector {
         http_server = http_server.with_connector(conn);
     }
-    
+
     if let Some(loader) = app_loader {
         http_server = http_server.with_app_loader(loader);
     }
-    
+
     if let Some(vdb) = vector_db {
         http_server = http_server.with_vector_db(vdb);
     }
-    
+    */
+
     http_server.start().await?;
     
     Ok(())

@@ -19,7 +19,7 @@
 use mecp::core::{
     http_server::HttpServer,
     server::McpServer,
-    metrics::{MetricsCollector, MySqlMetricsWriter},
+    metrics::MetricsCollector,
 };
 use std::sync::Arc;
 
@@ -56,12 +56,13 @@ async fn main() -> anyhow::Result<()> {
 
     // Create HTTP server with metrics
     println!("3. Starting HTTP server with dashboard...");
+    let host = "127.0.0.1".to_string();
     let port = std::env::var("MCP_PORT")
         .ok()
         .and_then(|p| p.parse().ok())
         .unwrap_or(3000);
 
-    let server = HttpServer::with_metrics(mcp_server, metrics, port);
+    let server = HttpServer::with_metrics(mcp_server, metrics, host, port);
 
     println!();
     println!("✓ Server starting on http://127.0.0.1:{}", port);
